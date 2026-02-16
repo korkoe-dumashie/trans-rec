@@ -11,6 +11,8 @@ class UserRole extends Model
     protected $fillable = [
         'user_id',
         'role_id',
+        'assigned_by',
+        'assigned_at',
     ];
 
 
@@ -22,5 +24,10 @@ class UserRole extends Model
     public function role()
     {
         return $this->belongsTo(Role::class);
+    }
+
+        public function assignedBy()
+    {
+        return $this->belongsTo(User::class, 'assigned_by');
     }
 }

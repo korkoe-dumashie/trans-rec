@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Route;
 // })->middleware('auth:sanctum');
 
 
-Route::apiResource('user', UserManagementController::class);
 
 Route::controller(AuthController::class)->group(function () {
     Route::post('login', 'login');
@@ -18,9 +17,14 @@ Route::controller(AuthController::class)->group(function () {
 });
 
 
-Route::apiResource('role',RoleController::class);
 
-Route::apiResource('user-role',UserRoleController::class);
 
+
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::apiResource('user', UserManagementController::class);
+    Route::apiResource('role',RoleController::class);
+
+    Route::apiResource('user-role',UserRoleController::class);
+});
 
 

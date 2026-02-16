@@ -22,7 +22,19 @@ class StoreAuthRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'staff_id' => 'required|string|exists:auths,staff_id',
+            'password' => 'required|string',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'staff_id.required' => 'Staff ID is required.',
+            'staff_id.string' => 'Staff ID must be a string.',
+            'staff_id.exists' => 'No user found with the provided Staff ID.',
+            'password.required' => 'Password is required.',
+            'password.string' => 'Password must be a string.',
         ];
     }
 }

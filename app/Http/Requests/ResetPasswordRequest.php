@@ -23,25 +23,29 @@ class ResetPasswordRequest extends FormRequest
      */
     public function rules(): array
     {
+        // return [
+        //     //
+        //     'staff_id' => 'required|string|exists:users,staff_id|unique:auths,staff_id',
+        //     'password' => ['required',Password::defaults()],
+        // ];
         return [
-            //
-            'staff_id' => 'required|string|exists:users,staff_id|unique:auths,staff_id',
-            'password' => ['required',Password::defaults()],
-        ];
+        'staff_id' => 'required|string|exists:auths,staff_id',
+        'old_password' => ['nullable','string',Password::defaults()], // Optional for first-time reset
+        'new_password' => ['required','confirmed',Password::defaults()]
+    ];
     }
 
 
     public function messages()
     {
         return[
-            'staff_id.required'=>'This staff does not exist',
-            'staff_id.string'=>'Invalid staff ID format',
-            'staff_id.unique'=>'This staff already has already reset their password',
-            'password.required'=>'Password is required',
-            'password.string'=>'Invalid password format',
-            'password.min'=>'Password must be at least 8 characters',
-            'password.confirmed'=>'Password confirmation does not match',
-            
+            'staff_id.required'=>'the staff id is required',
+            'Staff_id.string'=>'the staff id must be a string',
+            'staff_id.exists'=>'the staff id does not exist',
+            'old_password.string'=>'the old password must be a string',
+            'new_password.required'=>'the new password is required',
+            'new_password.confirmed'=>'the new password confirmation does not match',
+
         ];
 
     }

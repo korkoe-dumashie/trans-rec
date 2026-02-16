@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\v1;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Http\Requests\{StoreActivityLogRequest,UpdateActivityLogRequest};
+use App\Http\Resources\V1\ActivityResource;
 
 class ActivityLogController extends Controller
 {
@@ -13,7 +14,9 @@ class ActivityLogController extends Controller
      */
     public function index()
     {
-        //
+            $logs = ActivityLog::with('user')->paginate(10);
+
+    return ActivityResource::collection($logs);
     }
 
     /**
