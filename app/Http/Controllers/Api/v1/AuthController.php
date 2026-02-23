@@ -46,7 +46,7 @@ public function authUsers(){
 
 
         // Check if user needs to reset password
-        if (!$user->reset_password) {
+        if ($user->reset_password) {
             Log::info('User needs to reset password: ' . $user->staff_id);
             return response()->json([
                 'message' => 'Password reset required',

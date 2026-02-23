@@ -61,6 +61,7 @@ public function store(Request $request)
         $auth_user = Auth::create([
             'user_id'  => $user->id,
             'staff_id' => $newUser['staff_id'],
+            'reset_password' => true,
         ]);
 
         UserRole::create([
