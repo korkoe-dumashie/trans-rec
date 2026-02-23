@@ -19,11 +19,15 @@ class CheckPermission
     {
 
     $authUser = Auth::where('staff_id', $request->user()->staff_id)->first();
+
+    Log::debug('Checking permissions for user: '.$authUser);
     if (!$authUser) {
         return response()->json(['message' => 'Unauthorized'], 401);
     }
 
     $userRoles = $authUser->user->role()->pluck('id')->toArray();
+
+    
 
     Log::info('User Roles: ' . implode(', ', $userRoles));
 

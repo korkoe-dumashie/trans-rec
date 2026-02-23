@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\v1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ResetPasswordRequest;
 use App\Http\Requests\StoreAuthRequest;
+use App\Http\Resources\V1\AuthResource;
 use App\Models\{Auth,ActivityLog};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{DB, Hash,Log};
@@ -16,7 +17,7 @@ class AuthController extends Controller
 
 public function authUsers(){
     $authUsers = Auth::with('user')->get();
-    return response()->json($authUsers);
+    return response()->json(AuthResource::collection($authUsers));
 }
     public function login(Request $request)
     {
