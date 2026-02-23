@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->unique()->constrained()->onDelete('cascade');
             $table->string('staff_id')->unique();
             // $table->foreignId('role_id')->constrained('roles')->onDelete('cascade');
-            $table->string('password');
+            $table->string('password')->nullable();
             $table->boolean('reset_password')->default(false);
 
 

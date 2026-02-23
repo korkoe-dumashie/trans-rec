@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Api\v1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Resources\V1\UserResource;
-use App\Models\{User,Auth, UserRole};
+use App\Models\{ActivityLog, User,Auth, UserRole};
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\{DB,Log};
+use Illuminate\Support\Facades\{DB,Log, Validator};
 
 class UserManagementController extends Controller
 {
@@ -24,35 +24,64 @@ class UserManagementController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreUserRequest $storeUserRequest)
-    {
+public function store(Request $request)
+{
+    Log::debug("Got here");
+    return DB::transaction(function () use ($request) {
 
-        Log::debug("Got here");
-        Log::debug($storeUserRequest->validated());
+        Log::debug("validating");
+        $validated = Validator::make($request->all(), [
+            'first_name' => 'required|string|max:255',
+            'last_name'  => 'required|string|max:255',
+            'staff_id'   => 'required|string',
+            'role_id'    => 'required|integer',
+        ]);
 
-        DB::transaction(function() use ($storeUserRequest){
-        $user = User::create($storeUserRequest->validated());
+        if ($validated->fails()) {
+            Log::warning('User creation failed: Validation error', ['errors' => $validated->errors()]);
+            return response()->json(['message' => 'Validation failed', 'errors' => $validated->errors()], 400);
+        }
+
+        $newUser = $validated->validated();
+
+        $existingUser = Auth::where('staff_id', $newUser['staff_id'])->first();
+        if ($existingUser) {
+            Log::warning('Attempted to create duplicate user with staff_id: ' . $newUser['staff_id']);
+            return response()->json(['message' => 'User with this staff ID already exists'], 403);
+        }
+
+        $user = User::create([
+            'first_name' => $newUser['first_name'],
+            'last_name'  => $newUser['last_name'],
+        ]);
 
         $auth_user = Auth::create([
-                'user_id'=>$user->id,
-                'staff_id'=>$storeUserRequest->staff_id,
-                'password'=>bcrypt('defaultPassword123'),
+            'user_id'  => $user->id,
+            'staff_id' => $newUser['staff_id'],
         ]);
 
         UserRole::create([
-            'user_id'=>$user->id,
-            'role_id'=>$storeUserRequest->role_id
+            'user_id' => $user->id,
+            'role_id' => $newUser['role_id'],
         ]);
 
-        
+        ActivityLog::create([
+            'user_id'       => $user->id,
+            'action'        => 'User Created',
+            'resource_type' => 'User Management',
+            'metadata'      => json_encode([
+                'staff_id'  => $auth_user->staff_id,
+                'user_name' => $user->first_name . ' ' . $user->last_name,
+                'timestamp' => now()->toDateTimeString(),
+            ]),
+        ]);
 
-        Log::debug('Created user role association: ', ['user_id' => $user->id, 'role_id' => $storeUserRequest->role_id]);
+        Log::debug('Created user role association: ', ['user_id' => $user->id, 'role_id' => $newUser['role_id']]);
         Log::info('Created user: ', ['user' => $user]);
+
         return new UserResource($user);
-
     });
-    }
-
+}
     /**
      * Display the specified resource.
      */
