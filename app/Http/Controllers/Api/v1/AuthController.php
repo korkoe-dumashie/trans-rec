@@ -12,6 +12,12 @@ use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
 {
+
+
+public function authUsers(){
+    $authUsers = Auth::with('user')->get();
+    return response()->json($authUsers);
+}
     public function login(Request $request)
     {
 

@@ -15,7 +15,7 @@ Route::controller(AuthController::class)->group(function () {
     Route::put('reset-password', 'resetPassword');
     });
 
-    Route::get('users', [UserManagementController::class, 'index']);
+    Route::get('users', [AuthController::class, 'authUsers']);
 
 
 
