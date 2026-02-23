@@ -12,10 +12,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::controller(AuthController::class)->group(function () {
     Route::post('login', 'login');
-
     Route::put('reset-password', 'resetPassword');
-});
+    });
 
+    Route::get('users', [UserManagementController::class, 'index']);
 
 
 
