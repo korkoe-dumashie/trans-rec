@@ -137,7 +137,7 @@ public function authUsers(){
 
         } catch (\Exception $e) {
             Log::error('Error resetting password: ' . $e->getMessage());
-            return response()->json(['message' => 'Error resetting password'], 500);
+            return response()->json(['message' => 'Error resetting password: ' . $e->getMessage()], 500);
         }
     }
 }
