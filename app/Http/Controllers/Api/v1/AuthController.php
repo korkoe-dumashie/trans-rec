@@ -111,8 +111,10 @@ public function authUsers(){
 
             // Update password and set reset_password to true
             $user->password = Hash::make($validated['new_password']);
-            $user->reset_password = true;
+            $user->reset_password = false;
             $user->update();
+
+            Log::debug("User updated: ". $user);
 
             // Generate token for immediate login after password reset
             $token = $user->createToken('auth-token')->plainTextToken;

@@ -20,8 +20,8 @@ Route::controller(AuthController::class)->group(function () {
 
 
 
-Route::middleware(['auth:sanctum','permission'])->group(function () {
-    Route::apiResource('user', UserManagementController::class);
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::apiResource('user', UserManagementController::class)->middleware('permission:user,read,create,update,delete,export,import');
     Route::apiResource('role',RoleController::class);
 
     Route::apiResource('user-role',UserRoleController::class);

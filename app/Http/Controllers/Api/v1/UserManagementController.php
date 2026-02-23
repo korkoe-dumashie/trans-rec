@@ -7,7 +7,7 @@ use App\Http\Requests\StoreUserRequest;
 use App\Http\Resources\V1\UserResource;
 use App\Models\{ActivityLog, User,Auth, UserRole};
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\{DB,Log, Validator};
+use Illuminate\Support\Facades\{Auth as FacadesAuth, DB,Log, Validator};
 
 class UserManagementController extends Controller
 {
@@ -44,6 +44,8 @@ public function store(Request $request)
 
         $newUser = $validated->validated();
 
+
+        Log::debug('Validated user data: ', ['data' => $newUser]);
         $existingUser = Auth::where('staff_id', $newUser['staff_id'])->first();
         if ($existingUser) {
             Log::warning('Attempted to create duplicate user with staff_id: ' . $newUser['staff_id']);
@@ -53,6 +55,7 @@ public function store(Request $request)
         $user = User::create([
             'first_name' => $newUser['first_name'],
             'last_name'  => $newUser['last_name'],
+            'staff_id'   => $newUser['staff_id'],
         ]);
 
         $auth_user = Auth::create([
@@ -63,6 +66,7 @@ public function store(Request $request)
         UserRole::create([
             'user_id' => $user->id,
             'role_id' => $newUser['role_id'],
+            'assigned_by' => FacadesAuth::user()->id,
         ]);
 
         ActivityLog::create([

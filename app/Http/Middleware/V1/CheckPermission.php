@@ -18,6 +18,8 @@ class CheckPermission
     public function handle(Request $request, Closure $next,string $resourceName, string $action): Response
     {
 
+    Log::debug("Checking permissions for resource: $resourceName and action: $action");
+
     $authUser = Auth::where('staff_id', $request->user()->staff_id)->first();
 
     Log::debug('Checking permissions for user: '.$authUser);
@@ -25,9 +27,10 @@ class CheckPermission
         return response()->json(['message' => 'Unauthorized'], 401);
     }
 
-    $userRoles = $authUser->user->role()->pluck('id')->toArray();
+    // $userRoles = $authUser->user->role()->pluck('id')->toArray();
+$userRoles = $authUser->user->role()->pluck('roles.id')->toArray();
 
-    
+
 
     Log::info('User Roles: ' . implode(', ', $userRoles));
 
