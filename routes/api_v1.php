@@ -20,7 +20,7 @@ Route::controller(AuthController::class)->group(function () {
 
 
 
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware(['auth:sanctum','permission'])->group(function () {
     Route::apiResource('user', UserManagementController::class);
     Route::apiResource('role',RoleController::class);
 
