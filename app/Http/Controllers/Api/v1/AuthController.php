@@ -96,7 +96,7 @@ public function authUsers(){
             }
 
             // Verify old password if user has already reset (optional security measure)
-            if ($user->reset_password) {
+            if (!$user->reset_password) {
                 return response()->json([
                     'message' => 'Your password has already been set. Please log in and change your password from your profile, use the forgot password feature, or contact support to reset your account.'
                 ], 403);
