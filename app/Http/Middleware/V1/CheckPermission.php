@@ -28,23 +28,25 @@ class CheckPermission
     }
 
     // $userRoles = $authUser->user->role()->pluck('id')->toArray();
-$userRoles = $authUser->user->role()->pluck('roles.id')->toArray();
+$userRoleId = $authUser->user->role_id;
+if (!$userRoleId) {
+    return response()->json(['message' => 'No role assigned'], 403);
+}
 
 
-
-    Log::info('User Roles: ' . implode(', ', $userRoles));
+    Log::info('User Role ID: ' . $userRoleId);
 
     $resource = Resource::where('name',$resourceName)->first();
 
     if(!$resource || !$resource->is_active){
-        return response()->json(['message' => 'Resource not found or inactive'], 404);
+        return response()->json(['message' => 'Resource not found or inactive'], 403);
     }
 
 
-            $hasPermission = Permission::whereIn('role_id', $userRoles)
-            ->where('resource_id', $resource->id)
-            ->where("can_$action", true)
-            ->exists();
+            $hasPermission = Permission::where('role_id', $userRoleId)
+    ->where('resource_id', $resource->id)
+    ->where("can_$action", true)
+    ->exists();
 
         if (!$hasPermission) {
             return response()->json(['message' => 'Unauthorized action'], 403);

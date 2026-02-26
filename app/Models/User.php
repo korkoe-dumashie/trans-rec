@@ -21,6 +21,7 @@ class User extends Authenticatable
     protected $fillable = [
         'first_name',
         'last_name',
+        'role_id',
         'staff_id',
         'email',
         'password',
@@ -37,7 +38,7 @@ class User extends Authenticatable
     ];
 
     public function role(){
-        return $this->belongsToMany(Role::class, 'user_roles');
+        return $this->belongsTo(Role::class);
     }
 
 
@@ -47,6 +48,19 @@ class User extends Authenticatable
 
     public function activityLogs(){
         return $this->hasMany(ActivityLog::class);
+    }
+
+
+    public function userDetails(){
+        //helper method to fetch user details, roles for the client
+
+        return [
+            'id' => $this->id,
+            'first_name' => $this->first_name,
+            'last_name' => $this->last_name,
+            'staff_id' => $this->staff_id,
+            'role' => $this->role ? $this->role->name : null,
+        ];
     }
 
     /**

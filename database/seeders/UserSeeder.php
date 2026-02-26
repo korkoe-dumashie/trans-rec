@@ -19,16 +19,19 @@ class UserSeeder extends Seeder
                 'first_name' => 'Super',
                 'last_name' => 'Admin',
                 'staff_id' => 'admin',
+                'role_id' => 1, // Super Admin role
             ],
             [
                 'first_name' => 'John',
                 'last_name' => 'Doe',
                 'staff_id' => 'JD001',
+                'role_id' => 2, // Admin role
             ],
             [
                 'first_name' => 'Jane',
                 'last_name' => 'Smith',
                 'staff_id' => 'JS001',
+                'role_id' => 3, // Manager role
             ],
         ];
 

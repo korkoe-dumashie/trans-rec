@@ -13,10 +13,35 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
-        Role::create([
-            'name' => 'admin',
-            'description' => 'Administrator with full access to all resources and permissions.',
-            ]);
-            // Role::factory()->count(5)->create();
+        $roles = [
+            [
+                'name' => 'super_admin',
+                'description' => 'Super Administrator with unrestricted access to all system features and settings.',
+            ],
+            [
+                'name' => 'admin',
+                'description' => 'Administrator with full access to all resources and permissions.',
+            ],
+            [
+                'name' => 'manager',
+                'description' => 'Manager with oversight capabilities and team management permissions.',
+            ],
+            [
+                'name' => 'team_lead',
+                'description' => 'Team Lead with project management and team coordination permissions.',
+            ],
+            [
+                'name' => 'accountant',
+                'description' => 'Accountant with access to financial records, invoices, and billing information.',
+            ],
+            [
+                'name' => 'support',
+                'description' => 'Support staff with access to customer service tools and ticket management.',
+            ],
+        ];
+
+        foreach ($roles as $role) {
+            Role::create($role);
+        }
     }
 }

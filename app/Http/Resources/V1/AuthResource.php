@@ -21,6 +21,7 @@ class AuthResource extends JsonResource
             'reset_password' => $this->reset_password,
             'first_name' => $this->user->first_name,
             'last_name' => $this->user->last_name,
+            'role' => $this->user->role ? $this->user->role->name : null,
         ];
     }
 }

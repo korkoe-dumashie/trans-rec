@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ResetPasswordRequest;
 use App\Http\Requests\StoreAuthRequest;
 use App\Http\Resources\V1\AuthResource;
+use App\Http\Resources\V1\UserResource;
 use App\Models\{Auth,ActivityLog};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{DB, Hash,Log};
@@ -74,7 +75,7 @@ public function authUsers(){
 
         return response()->json([
             'message' => 'Login successful',
-            // 'user' => $user->load('user'), // Load related user data if needed
+            'user' => AuthResource::make($user->load('user')),
             'token' => $token
         ], 200);
         });

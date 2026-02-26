@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\{Auth as FacadesAuth, DB,Log, Validator};
 
 class UserManagementController extends Controller
 {
+
+
     /**
      * Display a listing of the resource.
      */
@@ -56,6 +58,7 @@ public function store(Request $request)
             'first_name' => $newUser['first_name'],
             'last_name'  => $newUser['last_name'],
             'staff_id'   => $newUser['staff_id'],
+            'role_id'    => $newUser['role_id'],
         ]);
 
         $auth_user = Auth::create([
