@@ -167,7 +167,7 @@ public function authUsers(){
             ]);
             return response()->json([
                 'message' => 'Password reset successful',
-                'user' => $user->load('user'),
+                'user' => AuthResource::make($user->load('user')),
                 'token' => $token
             ], 200);
 
