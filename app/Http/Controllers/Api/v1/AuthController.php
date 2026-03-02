@@ -209,24 +209,23 @@ public function authUsers(){
     }
 
 
-    public function changePassword(Request $request)
+    public function changePassword(Request $request, string $staff_id)
     {
         try {
             $validated = $request->validate([
-                'staff_id' => 'required|string',
                 'old_password' => 'required|string',
                 'new_password' => ['required', 'confirmed', Password::defaults()],
             ]);
 
-            $user = Auth::where('staff_id', $validated['staff_id'])->first();
+            $user = Auth::where('staff_id', $staff_id)->first();
 
             if (!$user) {
-                Log::warning('Password change failed: User not found for staff_id ' . $validated['staff_id']);
+                Log::warning('Password change failed: User not found for staff_id ' . $staff_id);
                 return response()->json(['message' => 'User not found. Contact support if this is an error.'], 404);
             }
 
             if (!Hash::check($validated['old_password'], $user->password)) {
-                Log::warning('Password change failed: Invalid old password for staff_id ' . $validated['staff_id']);
+                Log::warning('Password change failed: Invalid old password for staff_id ' . $staff_id);
                 return response()->json(['message' => 'Invalid old password'], 401);
             }
 

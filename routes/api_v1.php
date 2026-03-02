@@ -26,7 +26,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Route::apiResource('user-role',UserRoleController::class);
 
-    Route::patch('changePassword', [AuthController::class, 'changePassword']);
+    Route::patch('changePassword/{staff_id}', [AuthController::class, 'changePassword']);
     Route::controller(AuthController::class)->group(function () {
         Route::get('allUsers', 'index');
         // Route::
