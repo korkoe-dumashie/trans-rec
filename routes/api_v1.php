@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Api\v1\{ActivityLogController, AuthController, PermissionController, RoleController,UserManagementController, UserRoleController, UserSessionsController};
+use App\Http\Controllers\Api\v1\{ActivityLogController, AuthController, PermissionController, RoleController, TransactionController, UserManagementController, UserRoleController, UserSessionsController};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -47,10 +47,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::controller(UserManagementController::class)->group(function () {
         Route::post('user', 'store')->middleware('permission:user,create');
         Route::get('user', 'index')->middleware('permission:user,read');
-        Route::get('user/{id}', 'show')->middleware('permission:user,read');
-        Route::put('user/{id}', 'update')->middleware('permission:user,update');
-        Route::delete('user/{id}', 'destroy')->middleware('permission:user,delete');
-        Route::patch('user/{id}/activate', 'activate')->middleware('permission:user,update');
+        Route::get('user/{staff_id}', 'show')->middleware('permission:user,read');
+        Route::put('user/{staff_id}', 'update')->middleware('permission:user,update');
+        Route::delete('user/{staff_id}', 'destroy')->middleware('permission:user,delete');
+        Route::patch('user/{staff_id}/activate', 'activate')->middleware('permission:user,update');
     });
 
     Route::controller(RoleController::class)->group(function () {
@@ -62,6 +62,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::controller(UserRoleController::class)->group(function () {
         Route::post('storeUserRole', 'store')->middleware('permission:user_role,create');
         Route::get('getUserRoles', 'index')->middleware('permission:user_role,read');
+    });
+
+
+    Route::controller(TransactionController::class)->group(function(){
+        Route::get('allTransactions', 'index')->middleware('permission:transactions,read');
+        Route::post('transactions', 'store')->middleware('permission:transactions,create');
+        Route::get('transactions/{id}', 'show')->middleware('permission:transactions,read');
+        Route::put('transactions/{id}', 'update')->middleware('permission:transactions,update');
+        Route::delete('transactions/{id}', 'destroy')->middleware('permission:transactions,delete');
     });
 
 

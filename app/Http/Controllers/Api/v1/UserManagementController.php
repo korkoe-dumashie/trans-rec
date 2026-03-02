@@ -39,7 +39,7 @@ public function store(Request $request)
             'first_name' => 'required|string|max:255',
             'last_name'  => 'required|string|max:255',
             //convert staff id to capital letters to maintain consistency
-            'staff_id'   => 'required|string|unique:auth,staff_id',
+            'staff_id'   => 'required|string|unique:auths,staff_id',
             'role_id'    => 'required|integer',
         ]);
 
@@ -107,10 +107,10 @@ public function store(Request $request)
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, string $staff_id)
     {
         //update user details
-        $user = User::findOrFail($id);
+        $user = User::where('staff_id', $staff_id)->firstOrFail();
         $validated = Validator::make($request->all(), [
             'first_name' => 'sometimes|string|max:255',
             'last_name'  => 'sometimes|string|max:255',
@@ -125,6 +125,15 @@ public function store(Request $request)
             return response()->json(['message' => 'Validation failed', 'errors' => $validated->errors()], 400);
         }
 
+
+        $authUser = Auth::where('user_id', $user->id)->first();
+
+        if ($authUser) {
+            $authUser->update([
+                'staff_id' => $validated->validated()['staff_id'] ?? $authUser->staff_id,
+                'is_active' => $validated->validated()['is_active'] ?? $authUser->is_active,
+            ]);
+        }
         $user->update($validated->validated());
 
         ActivityLog::create([
@@ -145,10 +154,15 @@ public function store(Request $request)
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(string $staff_id)
     {
-        $user = User::findOrFail($id);
+        $user = User::where('staff_id', $staff_id)->firstOrFail();
         $user->delete();
+
+        $authUser = Auth::where('user_id', $user->id)->first();
+        if ($authUser) {
+            $authUser->delete();
+        }
 
         ActivityLog::create([
             'user_id'       => $user->id,
@@ -198,10 +212,10 @@ public function store(Request $request)
         return response()->json(['message' => 'User deactivated successfully', 'user' => new UserResource($user)], 200);
     }
 
-    public function restore(string $id)
+    public function restore(string $staff_id)
     {
         try{
-        $user = User::withTrashed()->findOrFail($id);
+        $user = User::withTrashed()->where('staff_id', $staff_id)->firstOrFail();
         $user->restore();
 
         ActivityLog::create([
@@ -223,14 +237,17 @@ public function store(Request $request)
 
 
 
-    public function activate(string $id)
+    public function activate(string $staff_id)
     {
 
     try{
-        $user = User::withTrashed()->findOrFail($id)->where('is_active', false)->first();
+        $user = User::withTrashed()->where('staff_id', $staff_id)->firstOrFail();
+        if ($user->is_active) {
+            return response()->json(['message' => 'User is already active'], 400);
+        }
         $user->update(['is_active' => true]);
 
-        $authUser = Auth::where('user_id', $user->id)->where('is_active', false)->first();
+        $authUser = Auth::where('user_id', $user->staff_id)->where('is_active', false)->first();
 
         if ($authUser) {
             $authUser->update(['is_active' => true]);
