@@ -18,8 +18,9 @@ class ActivityResource extends JsonResource
         'id' => $this->id,
         'user' => [
             'id' => $this->user->id,
-            'name' => $this->user->name,
+            'name' => $this->user->first_name . ' ' . $this->user->last_name,
             'staff_id' => $this->user->staff_id,
+            'role' => $this->user->role ? $this->user->role->name : null,
         ],
         'action' => $this->action,
         'resource_type' => $this->resource_type,

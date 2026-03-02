@@ -20,6 +20,8 @@ class UserResource extends JsonResource
             'last_name'=>$this->last_name,
             'staff_id'=>$this->staff_id,
             'role' => $this->role ? $this->role->name : null,
+            'is_active' => $this->is_active,
+            'last_login_time' => $this->lastLoginSession ? $this->lastLoginSession->last_login_time : null,
         ];
     }
 }

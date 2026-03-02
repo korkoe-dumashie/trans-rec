@@ -18,7 +18,7 @@ class UserManagementController extends Controller
      */
     public function index()
     {
-        $users = User::all();
+        $users = User::withTrashed()->get();
         Log::info('Fetched users: ', ['users' => $users]);
         return UserResource::collection($users);
     }
@@ -44,6 +44,7 @@ public function store(Request $request)
             return response()->json(['message' => 'Validation failed', 'errors' => $validated->errors()], 400);
         }
 
+
         $newUser = $validated->validated();
 
 
@@ -65,6 +66,7 @@ public function store(Request $request)
             'user_id'  => $user->id,
             'staff_id' => $newUser['staff_id'],
             'reset_password' => true,
+            'is_active' => true,
         ]);
 
         UserRole::create([
@@ -103,7 +105,37 @@ public function store(Request $request)
      */
     public function update(Request $request, string $id)
     {
-        //
+        //update user details
+        $user = User::findOrFail($id);
+        $validated = Validator::make($request->all(), [
+            'first_name' => 'sometimes|string|max:255',
+            'last_name'  => 'sometimes|string|max:255',
+            'staff_id'   => 'sometimes|string',
+            'role_id'    => 'sometimes|integer',
+            'is_active'  => 'sometimes|boolean',
+
+        ]);
+
+        if ($validated->fails()) {
+            Log::warning('User update failed: Validation error', ['errors' => $validated->errors()]);
+            return response()->json(['message' => 'Validation failed', 'errors' => $validated->errors()], 400);
+        }
+
+        $user->update($validated->validated());
+
+        ActivityLog::create([
+            'user_id'       => $user->id,
+            'action'        => 'User Updated',
+            'resource_type' => 'User Management',
+            'metadata'      => json_encode([
+                'staff_id'  => $user->staff_id,
+                'user_name' => $user->first_name . ' ' . $user->last_name,
+                'timestamp' => now()->toDateTimeString(),
+            ]),
+        ]);
+
+        Log::info('Updated user: ', ['user' => $user]);
+        return response()->json(['message' => 'User updated successfully', 'user' => new UserResource($user)], 200);
     }
 
     /**
@@ -111,6 +143,89 @@ public function store(Request $request)
      */
     public function destroy(string $id)
     {
-        //
+        $user = User::findOrFail($id);
+        $user->delete();
+
+        ActivityLog::create([
+            'user_id'       => $user->id,
+            'action'        => 'User Deleted',
+            'resource_type' => 'User Management',
+            'metadata'      => json_encode([
+                'staff_id'  => $user->staff_id,
+                'user_name' => $user->first_name . ' ' . $user->last_name,
+                'timestamp' => now()->toDateTimeString(),
+            ]),
+        ]);
+
+        Log::info('Deleted user: ', ['user' => $user]);
+        return response()->json(['message' => 'User deleted successfully'], 200);
     }
+
+
+    public function deactivate(string $id)
+    {
+        try{
+        $user = User::findOrFail($id);
+        $user->update(['is_active' => false]);
+
+        $authUser = Auth::where('user_id', $user->id)->first();
+
+        if ($authUser) {
+            $authUser->update(['is_active' => false]);
+        }
+
+        ActivityLog::create([
+            'user_id'       => $user->id,
+            'action'        => 'User Deactivated',
+            'resource_type' => 'User Management',
+            'metadata'      => json_encode([
+                'staff_id'  => $user->staff_id,
+                'user_name' => $user->first_name . ' ' . $user->last_name,
+                'timestamp' => now()->toDateTimeString(),
+            ]),
+        ]);
+
+    }catch(\Exception $e){
+        Log::error('Error deactivating user: ' . $e->getMessage());
+        return response()->json(['message' => 'Error deactivating user: ' . $e->getMessage()], 500);
+    }
+
+        Log::info('Deactivated user: ', ['user' => $user]);
+        return response()->json(['message' => 'User deactivated successfully', 'user' => new UserResource($user)], 200);
+    }
+
+
+    public function activate(string $id)
+    {
+
+    try{
+        $user = User::withTrashed()->findOrFail($id)->where('is_active', false)->first();
+        $user->update(['is_active' => true]);
+
+        $authUser = Auth::where('user_id', $user->id)->where('is_active', false)->first();
+
+        if ($authUser) {
+            $authUser->update(['is_active' => true]);
+        }
+
+        ActivityLog::create([
+            'user_id'       => $user->id,
+            'action'        => 'User Activated',
+            'resource_type' => 'User Management',
+            'metadata'      => json_encode([
+                'staff_id'  => $user->staff_id,
+                'user_name' => $user->first_name . ' ' . $user->last_name,
+                'timestamp' => now()->toDateTimeString(),
+            ]),
+        ]);
+
+    }catch(\Exception $e){
+        Log::error('Error activating user: ' . $e->getMessage());
+        return response()->json(['message' => 'Error activating user: ' . $e->getMessage()], 500);
+    }
+
+        Log::info('Activated user: ', ['user' => $user]);
+        return response()->json(['message' => 'User activated successfully', 'user' => new UserResource($user)], 200);
+}
+
 }

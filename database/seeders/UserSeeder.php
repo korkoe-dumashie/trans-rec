@@ -24,13 +24,13 @@ class UserSeeder extends Seeder
             [
                 'first_name' => 'John',
                 'last_name' => 'Doe',
-                'staff_id' => 'JD001',
+                'staff_id' => 'ps-002',
                 'role_id' => 2, // Admin role
             ],
             [
                 'first_name' => 'Jane',
                 'last_name' => 'Smith',
-                'staff_id' => 'JS001',
+                'staff_id' => 'ps-001',
                 'role_id' => 3, // Manager role
             ],
         ];

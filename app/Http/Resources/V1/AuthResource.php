@@ -20,8 +20,10 @@ class AuthResource extends JsonResource
             'staff_id' => $this->staff_id,
             'reset_password' => $this->reset_password,
             'first_name' => $this->user->first_name,
+            'is_active' => $this->is_active,
             'last_name' => $this->user->last_name,
             'role' => $this->user->role ? $this->user->role->name : null,
+            'last_login_time'=> $this->user->lastLoginSession ? $this->user->lastLoginSession->last_login_time : null,
         ];
     }
 }

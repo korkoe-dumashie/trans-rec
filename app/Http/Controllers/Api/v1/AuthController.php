@@ -7,7 +7,7 @@ use App\Http\Requests\ResetPasswordRequest;
 use App\Http\Requests\StoreAuthRequest;
 use App\Http\Resources\V1\AuthResource;
 use App\Http\Resources\V1\UserResource;
-use App\Models\{Auth,ActivityLog};
+use App\Models\{Auth,ActivityLog, UserSession};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{DB, Hash,Log};
 use Illuminate\Validation\Rules\Password;
@@ -16,8 +16,15 @@ class AuthController extends Controller
 {
 
 
+public function index()
+    {
+        $authUsers = Auth::with('user')->get();
+        return response()->json(AuthResource::collection($authUsers));
+    }
+
+
 public function authUsers(){
-    $authUsers = Auth::with('user')->get();
+    $authUsers = Auth::with('user')->where('is_active', true)->get();
     return response()->json(AuthResource::collection($authUsers));
 }
     public function login(Request $request)
@@ -31,7 +38,18 @@ public function authUsers(){
                 Log::warning('Login failed: Missing staff_id or password');
                 return response()->json(['message' => 'Staff ID or Password are required'], 400);
                 }
-                $user = Auth::where('staff_id', $request->staff_id)->first();
+
+
+            $user = Auth::where('staff_id', $request->staff_id)->first();
+
+
+            $userId = $user->user->id ?? null;
+
+            
+            if($user->is_active === false) {
+                Log::warning('Login failed: Inactive account for staff_id ' . $request->staff_id);
+                return response()->json(['message' => 'Your account is inactive. Contact support for assistance.'], 403);
+            }
 
 
         if (!$user) {
@@ -59,6 +77,11 @@ public function authUsers(){
 
         // User has reset password, proceed with login
         $token = $user->createToken('auth-token')->plainTextToken;
+
+            UserSession::create([
+                'user_id' => $userId,
+                'last_login_time' => now()->toDateTimeString(),
+            ]);
 
         ActivityLog::create([
             'user_id' => $user->id,
@@ -91,13 +114,17 @@ public function authUsers(){
 
             $user = Auth::where('staff_id', $validated['staff_id'])->first();
 
+            $userId = $user->user->id ?? null;
+
+            Log::debug($userId ? "Found user ID $userId for staff_id " . $validated['staff_id'] : "No user found for staff_id " . $validated['staff_id']);
+
             if (!$user) {
                 Log::warning('Password reset failed: User not found for staff_id ' . $validated['staff_id']);
                 return response()->json(['message' => 'User not found. Contact support if this is an error.'], 404);
             }
 
             // Verify old password if user has already reset (optional security measure)
-            if (!$user->reset_password) {
+            if ($user->reset_password === false) {
                 return response()->json([
                     'message' => 'Your password has already been set. Please log in and change your password from your profile, use the forgot password feature, or contact support to reset your account.'
                 ], 403);
@@ -122,6 +149,12 @@ public function authUsers(){
 
             Log::info('Password reset successful for staff_id: ' . $user->staff_id);
 
+
+            UserSession::create([
+                'user_id' => $userId,
+                'last_login_time' => now()->toDateTimeString(),
+            ]);
+
             ActivityLog::create([
                 'user_id' => $user->id,
                 'action' => 'Password Reset',
@@ -141,6 +174,63 @@ public function authUsers(){
         } catch (\Exception $e) {
             Log::error('Error resetting password: ' . $e->getMessage());
             return response()->json(['message' => 'Error resetting password: ' . $e->getMessage()], 500);
+        }
+    }
+
+
+    public function changePassword(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'staff_id' => 'required|string',
+                'old_password' => 'required|string',
+                'new_password' => ['required', 'confirmed', Password::defaults()],
+            ]);
+
+            $user = Auth::where('staff_id', $validated['staff_id'])->first();
+
+            if (!$user) {
+                Log::warning('Password change failed: User not found for staff_id ' . $validated['staff_id']);
+                return response()->json(['message' => 'User not found. Contact support if this is an error.'], 404);
+            }
+
+            if (!Hash::check($validated['old_password'], $user->password)) {
+                Log::warning('Password change failed: Invalid old password for staff_id ' . $validated['staff_id']);
+                return response()->json(['message' => 'Invalid old password'], 401);
+            }
+
+            // Update password
+            $user->password = Hash::make($validated['new_password']);
+            $user->update();
+
+            Log::info('Password change successful for staff_id: ' . $user->staff_id);
+
+            $loginTime = now()->toDateTimeString();
+
+            UserSession::create([
+                'user_id' => $user->id,
+                'last_login_time' => $loginTime,
+            ]);
+
+            ActivityLog::create([
+                'user_id' => $user->id,
+                'action' => 'Password Changed',
+                'resource_type' => "Authentication",
+                'metadata' => json_encode([
+                    'staff_id' => $user->staff_id,
+                    'user_name' => $user->name,
+                    'timestamp' => now()->toDateTimeString(),
+                ]),
+            ]);
+
+            return response()->json([
+                'message' => 'Password changed successfully',
+                'user' => $user->load('user'),
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error('Error changing password: ' . $e->getMessage());
+            return response()->json(['message' => 'Error changing password: ' . $e->getMessage()], 500);
         }
     }
 }
