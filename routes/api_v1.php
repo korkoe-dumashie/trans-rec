@@ -69,13 +69,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
 
 
-    Route::controller(TransactionController::class)->group(function(){
-        Route::get('allTransactions', 'index')->middleware('permission:transactions,read');
-        Route::post('transactions', 'store')->middleware('permission:transactions,create');
-        Route::get('transactions/{id}', 'show')->middleware('permission:transactions,read');
-        Route::put('transactions/{id}', 'update')->middleware('permission:transactions,update');
-        Route::delete('transactions/{id}', 'destroy')->middleware('permission:transactions,delete');
-    });
+    // Route::controller(TransactionController::class)->group(function(){
+    //     Route::get('allTransactions', 'index')->middleware('permission:transactions,read');
+    //     Route::post('transactions', 'store')->middleware('permission:transactions,create');
+    //     Route::get('transactions/{id}', 'show')->middleware('permission:transactions,read');
+    //     Route::put('transactions/{id}', 'update')->middleware('permission:transactions,update');
+    //     Route::delete('transactions/{id}', 'destroy')->middleware('permission:transactions,delete');
+    // });
 
 
 
