@@ -180,37 +180,6 @@ public function store(Request $request)
     }
 
 
-    public function deactivate(string $id)
-    {
-        try{
-        $user = User::findOrFail($id);
-        $user->update(['is_active' => false]);
-
-        $authUser = Auth::where('user_id', $user->id)->first();
-
-        if ($authUser) {
-            $authUser->update(['is_active' => false]);
-        }
-
-        ActivityLog::create([
-            'user_id'       => $user->id,
-            'action'        => 'User Deactivated',
-            'resource_type' => 'User Management',
-            'metadata'      => json_encode([
-                'staff_id'  => $user->staff_id,
-                'user_name' => $user->first_name . ' ' . $user->last_name,
-                'timestamp' => now()->toDateTimeString(),
-            ]),
-        ]);
-
-    }catch(\Exception $e){
-        Log::error('Error deactivating user: ' . $e->getMessage());
-        return response()->json(['message' => 'Error deactivating user: ' . $e->getMessage()], 500);
-    }
-
-        Log::info('Deactivated user: ', ['user' => $user]);
-        return response()->json(['message' => 'User deactivated successfully', 'user' => new UserResource($user)], 200);
-    }
 
     public function restore(string $staff_id)
     {
@@ -235,42 +204,37 @@ public function store(Request $request)
         }
     }
 
-
-
-    public function activate(string $staff_id)
+    public function toggle(string $staff_id)
     {
+        $user = User::where('staff_id', $staff_id)->firstOrFail();
+        $authUser = Auth::where('user_id', $user->id)->first();
 
-    try{
-        $user = User::withTrashed()->where('staff_id', $staff_id)->firstOrFail();
-        if ($user->is_active) {
-            return response()->json(['message' => 'User is already active'], 400);
-        }
-        $user->update(['is_active' => true]);
-
-        $authUser = Auth::where('user_id', $user->staff_id)->where('is_active', false)->first();
-
+        //if user is active, deactivate them. If they are inactive, activate them
         if ($authUser) {
-            $authUser->update(['is_active' => true]);
+            $authUser->update([
+                'is_active' => !$authUser->is_active,
+            ]);
+            $status = $authUser->is_active ? 'activated' : 'deactivated';
+            ActivityLog::create([
+                'user_id'       => $user->id,
+                'action'        => "User $status",
+                'resource_type' => 'User Management',
+                'metadata'      => json_encode([
+                    'staff_id'  => $user->staff_id,
+                    'user_name' => $user->first_name . ' ' . $user->last_name,
+                    'timestamp' => now()->toDateTimeString(),
+                ]),
+            ]);
+
+        return response()->json(['message' => 'User ' . $status . ' successfully'], 200
+        );
+        } else {
+            Log::warning('User toggle failed: Auth record not found for staff_id ' . $staff_id);
+            return response()->json(['message' => 'User record not found. Contact support if this is an error.'], 404);
         }
-
-        ActivityLog::create([
-            'user_id'       => $user->id,
-            'action'        => 'User Activated',
-            'resource_type' => 'User Management',
-            'metadata'      => json_encode([
-                'staff_id'  => $user->staff_id,
-                'user_name' => $user->first_name . ' ' . $user->last_name,
-                'timestamp' => now()->toDateTimeString(),
-            ]),
-        ]);
-
-    }catch(\Exception $e){
-        Log::error('Error activating user: ' . $e->getMessage());
-        return response()->json(['message' => 'Error activating user: ' . $e->getMessage()], 500);
     }
 
-        Log::info('Activated user: ', ['user' => $user]);
-        return response()->json(['message' => 'User activated successfully', 'user' => new UserResource($user)], 200);
-}
+
+
 
 }
