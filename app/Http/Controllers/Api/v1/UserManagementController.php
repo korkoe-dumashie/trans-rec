@@ -194,6 +194,30 @@ public function store(Request $request)
         return response()->json(['message' => 'User deactivated successfully', 'user' => new UserResource($user)], 200);
     }
 
+    public function restore(string $id)
+    {
+        try{
+        $user = User::withTrashed()->findOrFail($id);
+        $user->restore();
+
+        ActivityLog::create([
+            'user_id'       => $user->id,
+            'action'        => 'User Restored',
+            'resource_type' => 'User Management',
+            'metadata'      => json_encode([
+                'staff_id'  => $user->staff_id,
+                'user_name' => $user->first_name . ' ' . $user->last_name,
+                'timestamp' => now()->toDateTimeString(),
+            ]),
+        ]);
+
+        }catch(\Exception $e){
+            Log::error('Error restoring user: ' . $e->getMessage());
+            return response()->json(['message' => 'Error restoring user: ' . $e->getMessage()], 500);
+        }
+    }
+
+    
 
     public function activate(string $id)
     {

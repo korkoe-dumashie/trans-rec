@@ -30,6 +30,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::controller(AuthController::class)->group(function () {
         Route::get('allUsers', 'index');
         // Route::
+        Route::patch('resetUserPassword/{staff_id}', 'resetUserPassword')->middleware('permission:user,update');
     });
 
     Route::controller(ActivityLogController::class)->group(function () {

@@ -45,7 +45,7 @@ public function authUsers(){
 
             $userId = $user->user->id ?? null;
 
-            
+
             if($user->is_active === false) {
                 Log::warning('Login failed: Inactive account for staff_id ' . $request->staff_id);
                 return response()->json(['message' => 'Your account is inactive. Contact support for assistance.'], 403);
@@ -174,6 +174,37 @@ public function authUsers(){
         } catch (\Exception $e) {
             Log::error('Error resetting password: ' . $e->getMessage());
             return response()->json(['message' => 'Error resetting password: ' . $e->getMessage()], 500);
+        }
+    }
+
+
+    public function resetUserPassword(Request $request, string $staff_id){
+        try{
+            //patch request to make user reset their password on first login
+            $user = Auth::where('staff_id', $staff_id)->first();
+            if (!$user) {
+                Log::warning('Password reset failed: User not found for staff_id ' . $staff_id);
+                return response()->json(['message' => 'User not found. Contact support if this is an error.'], 404);
+            }
+
+            $user->reset_password = true;
+            $user->update();
+            Log::info('Password reset flag set for staff_id: ' . $user->staff_id);
+            ActivityLog::create([
+                'user_id' => $user->id,
+                'action' => 'Password Reset Flag Set',
+                'resource_type' => "Authentication",
+                'metadata' => json_encode([
+                    'staff_id' => $user->staff_id,
+                    'user_name' => $user->name,
+                    'timestamp' => now()->toDateTimeString(),
+                ]),
+            ]);
+            return response()->json(['message' => 'User password reset flag set successfully. User will be required to reset password on next login.'], 200);
+        }
+        catch(\Exception $e){
+                Log::error('Error resetting user password: ' . $e->getMessage());
+                return response()->json(['message' => 'Error resetting user password: ' . $e->getMessage()], 500);
         }
     }
 
