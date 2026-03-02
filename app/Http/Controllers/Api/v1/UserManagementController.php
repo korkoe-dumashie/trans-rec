@@ -32,10 +32,14 @@ public function store(Request $request)
     return DB::transaction(function () use ($request) {
 
         Log::debug("validating");
+        $request->merge([
+    'staff_id' => strtoupper($request->staff_id)
+]);
         $validated = Validator::make($request->all(), [
             'first_name' => 'required|string|max:255',
             'last_name'  => 'required|string|max:255',
-            'staff_id'   => 'required|string',
+            //convert staff id to capital letters to maintain consistency
+            'staff_id'   => 'required|string|unique:auth,staff_id',
             'role_id'    => 'required|integer',
         ]);
 
@@ -217,7 +221,7 @@ public function store(Request $request)
         }
     }
 
-    
+
 
     public function activate(string $id)
     {

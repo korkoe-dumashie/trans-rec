@@ -15,7 +15,7 @@ class RoleSeeder extends Seeder
     {
         $roles = [
             [
-                'name' => 'super_admin',
+                'name' => 'super admin',
                 'description' => 'Super Administrator with unrestricted access to all system features and settings.',
             ],
             [
@@ -27,7 +27,7 @@ class RoleSeeder extends Seeder
                 'description' => 'Manager with oversight capabilities and team management permissions.',
             ],
             [
-                'name' => 'team_lead',
+                'name' => 'team lead',
                 'description' => 'Team Lead with project management and team coordination permissions.',
             ],
             [

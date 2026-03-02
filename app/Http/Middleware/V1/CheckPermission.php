@@ -49,7 +49,7 @@ if (!$userRoleId) {
     ->exists();
 
         if (!$hasPermission) {
-            return response()->json(['message' => 'Unauthorized action'], 403);
+            return response()->json(['message' => 'You are not authorized to perform this action. Stop😡'], 403);
         }
 
 
